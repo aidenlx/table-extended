@@ -1,6 +1,6 @@
 {
 	"id": "table-extended",
-	"name": "table Extended",
+	"name": "Table Extended",
 	"version": "1.0.0",
 	"minAppVersion": "0.10.12",
 	"description": "Enable extended table support with MultiMarkdown 6 syntax",
