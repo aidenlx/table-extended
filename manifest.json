@@ -1,10 +1,10 @@
 {
-	"id": "obsidian-sample-plugin",
-	"name": "Sample Plugin",
-	"version": "1.0.1",
-	"minAppVersion": "0.9.12",
-	"description": "This is a sample plugin for Obsidian. This plugin demonstrates some of the capabilities of the Obsidian API.",
-	"author": "Obsidian",
-	"authorUrl": "https://obsidian.md/about",
+	"id": "table-extended",
+	"name": "table Extended",
+	"version": "1.0.0",
+	"minAppVersion": "0.10.12",
+	"description": "Enable extended table support with MultiMarkdown 6 syntax",
+	"author": "AidenLx",
+	"authorUrl": "https://github.com/AidenLx/",
 	"isDesktopOnly": false
 }
