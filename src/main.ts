@@ -1,25 +1,14 @@
 import {
-  App,
   MarkdownPostProcessorContext,
   MarkdownRenderer,
   Plugin,
-  PluginManifest,
 } from "obsidian";
 import MarkdownIt from "markdown-it";
 import mTable from "markdown-it-multimd-table";
 import mFootnote from "markdown-it-footnote";
 import mdRegex from "@gerhobbelt/markdown-it-regexp";
 
-// interface MyPluginSettings {
-// 	mySetting: string;
-// }
-
-// const DEFAULT_SETTINGS: MyPluginSettings = {
-// 	mySetting: 'default'
-// }
-
 export default class TableExtended extends Plugin {
-  // settings: MyPluginSettings;
 
   mdParser: MarkdownIt;
 
@@ -29,6 +18,8 @@ export default class TableExtended extends Plugin {
 
 		const wikiRegex = /(?:(?<!\\)!)?\[\[([^\x00-\x1f|]+?)(?:\\?\|([\s\S]+?))?\]\]/;
 
+		// Initialize mdParaser with default presets
+		// Also load plugins
     this.mdParser = MarkdownIt()
       .use(mFootnote)
       .use(mTable, {
@@ -36,8 +27,7 @@ export default class TableExtended extends Plugin {
         rowspan: true,
         headerless: true,
       })
-      .use(
-        mdRegex(
+      .use(mdRegex(
           wikiRegex,
           (match: string, setup: unknown, options: unknown) =>
             `<span class="tx-wiki">${match[0]}</span>`
@@ -47,6 +37,12 @@ export default class TableExtended extends Plugin {
     this.registerMarkdownCodeBlockProcessor(
       "tx", processBlock.bind(this)
     );
+
+		// Read Obsidian's config to keep "strictLineBreaks" option in sync
+		this.app.vault.adapter.read(".obsidian/config").then((result) => {
+			const config = JSON.parse(result);
+			this.mdParser.set({ breaks: !config.strictLineBreaks })
+		})
   }
 
   onunload() {
@@ -64,11 +60,15 @@ function processBlock(
 	el.innerHTML = result;
 
 	for (const rawLink of el.querySelectorAll("span.tx-wiki")) {
+		// put rendered wiki-link element to the end of el.childNodes
 		MarkdownRenderer.renderMarkdown(
 			(rawLink as HTMLSpanElement).innerText,
 			el, ctx.sourcePath, null );
+		// Get rendered wiki-link element
 		let temp = el.lastElementChild;
-		rawLink.outerHTML = temp.innerHTML;
+		// Replace raw wiki-link with rendered one
+		rawLink.outerHTML = temp.innerHTML; // use innerHTML to extract <p><!--rendered---></p>
+		// Remove temp
 		el.removeChild(temp);
 	}
 }
