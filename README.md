@@ -1,56 +1,118 @@
-## Obsidian Sample Plugin
+# Table Extended
 
-This is a sample plugin for Obsidian (https://obsidian.md).
+Extend basic table in Obsidian with MultiMarkdown table syntax.
 
-This project uses Typescript to provide type checking and documentation.
-The repo depends on the latest plugin API (obsidian.d.ts) in Typescript Definition format, which contains TSDoc comments describing what it does.
+## Intro
 
-**Note:** The Obsidian API is still in early alpha and is subject to change at any time!
+Obsidian's [built-in table syntax](https://help.obsidian.md/How+to/Format+your+notes#tables) can only define the basics for tables. When users try to apply complex tables with `colspan` or multiple headers, their only option is to fall back to raw HTML, which is difficult to read and edit.
 
-This sample plugin demonstrates some of the basic functionality the plugin API can do.
-- Changes the default font color to red using `styles.css`.
-- Adds a ribbon icon, which shows a Notice when clicked.
-- Adds a command "Open Sample Modal" which opens a Modal.
-- Adds a plugin setting tab to the settings page.
-- Registers a global click event and output 'click' to the console.
-- Registers a global interval which logs 'setInterval' to the console.
+This plugin brings [MultiMarkdown table syntax][mmd6-table] to Obsidian, which provides the following features with internal links and embeds intact:
 
-### First time developing plugins?
+- Cell spans over columns
+- Cell spans over rows
+- Divide rows into sections
+- Multiple table headers
+- Table caption
+- Block-level elements such as lists, codes...
+- Omitted table header
 
-Quick starting guide for new plugin devs:
 
-- Make a copy of this repo as a template with the "Use this template" button (login to GitHub if you don't see it).
-- Clone your repo to a local development folder. For convenience, you can place this folder in your `.obsidian/plugins/your-plugin-name` folder.
-- Install NodeJS, then run `npm i` in the command line under your repo folder.
-- Run `npm run dev` to compile your plugin from `main.ts` to `main.js`.
-- Make changes to `main.ts` (or create new `.ts` files). Those changes should be automatically compiled into `main.js`.
-- Reload Obsidian to load the new version of your plugin.
-- Enable plugin in settings window.
 
-### Releasing new releases
+[mmd6]: https://fletcher.github.io/MultiMarkdown-6/
+[mdit]: https://markdown-it.github.io/
+[mmdt]: https://github.com/RedBug312/markdown-it-multimd-table
 
-- Update your `manifest.json` with your new version number, such as `1.0.1`, and the minimum Obsidian version required for your latest release.
-- Update your `versions.json` file with `"new-plugin-version": "minimum-obsidian-version"` so older versions of Obsidian can download an older version of your plugin that's compatible.
-- Create new GitHub release using your new version number as the "Tag version". Use the exact version number, don't include a prefix `v`. See here for an example: https://github.com/obsidianmd/obsidian-sample-plugin/releases
-- Upload the files `manifest.json`, `main.js`, `styles.css` as binary attachments.
-- Publish the release.
+## How to use
 
-### Adding your plugin to the community plugin list
+Due to the API restrictions, the texts need to be included inside fenced code blocks specified to language `tx` for the plugin to handle. For example: 
 
-- Publish an initial version.
-- Make sure you have a `README.md` file in the root of your repo.
-- Make a pull request at https://github.com/obsidianmd/obsidian-releases to add your plugin.
+    ```tx
+    |             |          Grouping           || 
+    First Header  | Second Header | Third Header | 
+     ------------ | :-----------: | -----------: | 
+    Content       |          *Long Cell*        || 
+    Content       |   **Cell**    |         Cell | 
+                                                   
+    New section   |     More      |         Data | 
+    And more      | With an escaped '\|'       || 
+    [Prototype table]
+    ```
 
-### How to use
+would be render as: 
 
-- Clone this repo.
-- `npm i` or `yarn` to install dependencies
-- `npm run dev` to start compilation in watch mode.
+<div class="block-language-tx"><table>
+<caption id="prototypetable">Prototype table</caption>
+<thead>
+<tr>
+<th></th>
+<th style="text-align:center" colspan="2">Grouping</th>
+</tr>
+<tr>
+<th>First Header</th>
+<th style="text-align:center">Second Header</th>
+<th style="text-align:right">Third Header</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Content</td>
+<td style="text-align:center" colspan="2"><em>Long Cell</em></td>
+</tr>
+<tr>
+<td>Content</td>
+<td style="text-align:center"><strong>Cell</strong></td>
+<td style="text-align:right">Cell</td>
+</tr>
+</tbody>
+<tbody>
+<tr>
+<td>New section</td>
+<td style="text-align:center">More</td>
+<td style="text-align:right">Data</td>
+</tr>
+<tr>
+<td>And more</td>
+<td style="text-align:center" colspan="2">With an escaped '|'</td>
+</tr>
+</tbody>
+</table>
+</div>
 
-### Manually installing the plugin
+For more detailed guide, check [markdown-it-multimd-table README](mmdtg) and [MultiMarkdown User's Guide][mmd6-table]
 
-- Copy over `main.js`, `styles.css`, `manifest.json` to your vault `VaultFolder/.obsidian/plugins/your-plugin-id/`.
+[mmdtg]: https://github.com/RedBug312/markdown-it-multimd-table/blob/master/README.md#usage
+[mmd6-table]: https://fletcher.github.io/MultiMarkdown-6/syntax/tables.html
 
-### API Documentation
+## Compatibility
 
-See https://github.com/obsidianmd/obsidian-api
+The required API feature is only available for Obsidian v0.10.12+.
+
+## Installation
+
+### From GitHub
+
+1. Download the Latest Release from the Releases section of the GitHub Repository
+2. Put files to your vault's plugins folder: `<vault>/.obsidian/plugins/cm-chs-patch`  
+3. Reload Obsidian
+4. If prompted about Safe Mode, you can disable safe mode and enable the plugin.
+Otherwise, head to Settings, third-party plugins, make sure safe mode is off and
+enable the plugin from there.
+
+> Note: The `.obsidian` folder may be hidden. On macOS, you should be able to press `Command+Shift+Dot` to show the folder in Finder.
+
+### From Obsidian
+
+> Not yet available
+
+1. Open `Settings` > `Third-party plugin`
+2. Make sure Safe mode is **off**
+3. Click `Browse community plugins`
+4. Search for this plugin
+5. Click `Install`
+6. Once installed, close the community plugins window and the patch is ready to use.
+
+## Behind the scene
+
+Due to the restriction of the current Obsidian API, the built-in markdown parser is not configurable. Instead, This plugin includes an standalone Markdown parser [markdown-it][mdit] with plugin[markdown-it-multimd-table][mmdt], and only the texts inside code block with language tag `tx` are passed to `markdown-it`. The internal links and embeds, however, are extracted and passed to Obsidian, so the core features of obsidian remain intact.
+
+Noted that the plugin may behave differently from the official MultiMarkdown compiler and Obsidian's parser, Please pose an issue if there are unexpected results for sensible inputs. 
