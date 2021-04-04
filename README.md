@@ -92,7 +92,7 @@ The required API feature is only available for Obsidian v0.10.12+.
 ### From GitHub
 
 1. Download the Latest Release from the Releases section of the GitHub Repository
-2. Put files to your vault's plugins folder: `<vault>/.obsidian/plugins/cm-chs-patch`  
+2. Put files to your vault's plugins folder: `<vault>/.obsidian/plugins/table-extended`  
 3. Reload Obsidian
 4. If prompted about Safe Mode, you can disable safe mode and enable the plugin.
 Otherwise, head to Settings, third-party plugins, make sure safe mode is off and
