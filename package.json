@@ -8,7 +8,8 @@
     "build": "rollup --config rollup.config.js",
     "version": "npm run bumpManifest && npm run bumpVersions",
     "bumpManifest": "jq .version=\\\"$npm_package_version\\\" manifest.json | sponge manifest.json && git add manifest.json",
-    "bumpVersions": "jq .\\\"$npm_package_version\\\"=\\\"0.10.12\\\" versions.json | sponge versions.json && git add versions.json"
+    "bumpVersions": "jq .\\\"$npm_package_version\\\"=\\\"0.10.12\\\" versions.json | sponge versions.json && git add versions.json",
+    "release": "release-it --no-increment"
   },
   "keywords": [],
   "author": "",
@@ -25,8 +26,25 @@
     "markdown-it-footnote": "^3.0.2",
     "markdown-it-multimd-table": "^4.0.3",
     "obsidian": "https://github.com/obsidianmd/obsidian-api/tarball/master",
+    "release-it": "^14.5.1",
     "rollup": "^2.32.1",
     "tslib": "^2.0.3",
     "typescript": "^4.0.3"
+  },
+  "release-it": {
+    "git": {
+      "commit": false,
+      "tag": false,
+      "push": false
+    },
+    "npm": {
+      "publish": false
+    },
+    "github": {
+      "release": true,
+      "assets": ["main.js","manifest.json"],
+      "proxy": "http://127.0.0.1:7890",
+      "releaseName": "${version}"
+    }
   }
 }
