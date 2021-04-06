@@ -5,7 +5,10 @@
   "main": "main.js",
   "scripts": {
     "dev": "rollup --config rollup.config.js -w",
-    "build": "rollup --config rollup.config.js"
+    "build": "rollup --config rollup.config.js",
+    "version": "npm run bumpManifest && npm run bumpVersions",
+    "bumpManifest": "jq .version=\\\"$npm_package_version\\\" manifest.json | sponge manifest.json && git add manifest.json",
+    "bumpVersions": "jq .\\\"$npm_package_version\\\"=\\\"0.10.12\\\" versions.json | sponge versions.json && git add versions.json"
   },
   "keywords": [],
   "author": "",
