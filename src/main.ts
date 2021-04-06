@@ -10,11 +10,9 @@ import mFootnote from "markdown-it-footnote";
 import mdRegex from "@gerhobbelt/markdown-it-regexp";
 
 export default class TableExtended extends Plugin {
-
   mdParser: MarkdownIt;
 
   async onload(): Promise<void> {
-
 		console.log("loading table-extended");
 
 		const wikiRegex = /(?:(?<!\\)!)?\[\[([^\x00-\x1f|]+?)(?:\\?\|([\s\S]+?))?\]\]/;
@@ -35,13 +33,12 @@ export default class TableExtended extends Plugin {
         )
       );
 
-    this.registerMarkdownCodeBlockProcessor(
-      "tx", processBlock.bind(this)
-    );
+    this.registerMarkdownCodeBlockProcessor("tx", processBlock.bind(this));
 
 		// Read Obsidian's config to keep "strictLineBreaks" option in sync
-		this.mdParser.set({ breaks: !(<VaultEx>this.app.vault).getConfig("strictLineBreaks") })
-
+    this.mdParser.set({
+      breaks: !(<VaultEx>this.app.vault).getConfig("strictLineBreaks"),
+    });
   }
 
   onunload() {
@@ -54,7 +51,6 @@ function processBlock(
 	el: HTMLElement,
 	ctx: MarkdownPostProcessorContext
 ) {
-
 	const result = this.mdParser.render(src);
 	el.innerHTML = result;
 
