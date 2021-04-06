@@ -2,7 +2,7 @@ import {
   MarkdownPostProcessorContext,
   MarkdownRenderer,
   Plugin,
-	VaultEx,
+  VaultEx,
 } from "obsidian";
 import MarkdownIt from "markdown-it";
 import mTable from "markdown-it-multimd-table";
@@ -13,12 +13,12 @@ export default class TableExtended extends Plugin {
   mdParser: MarkdownIt;
 
   async onload(): Promise<void> {
-		console.log("loading table-extended");
+    console.log("loading table-extended");
 
-		const wikiRegex = /(?:(?<!\\)!)?\[\[([^\x00-\x1f|]+?)(?:\\?\|([\s\S]+?))?\]\]/;
+    const wikiRegex = /(?:(?<!\\)!)?\[\[([^\x00-\x1f|]+?)(?:\\?\|([\s\S]+?))?\]\]/;
 
-		// Initialize mdParaser with default presets
-		// Also load plugins
+    // Initialize mdParaser with default presets
+    // Also load plugins
     this.mdParser = MarkdownIt()
       .use(mFootnote)
       .use(mTable, {
@@ -35,7 +35,7 @@ export default class TableExtended extends Plugin {
 
     this.registerMarkdownCodeBlockProcessor("tx", processBlock.bind(this));
 
-		// Read Obsidian's config to keep "strictLineBreaks" option in sync
+    // Read Obsidian's config to keep "strictLineBreaks" option in sync
     this.mdParser.set({
       breaks: !(<VaultEx>this.app.vault).getConfig("strictLineBreaks"),
     });
@@ -47,40 +47,40 @@ export default class TableExtended extends Plugin {
 }
 
 function processBlock(
-	src: string,
-	el: HTMLElement,
-	ctx: MarkdownPostProcessorContext
+  src: string,
+  el: HTMLElement,
+  ctx: MarkdownPostProcessorContext
 ) {
-	// import render results
-	const result = this.mdParser.render(src);
-	el.innerHTML = result;
+  // import render results
+  const result = this.mdParser.render(src);
+  el.innerHTML = result;
 
-	for (const e of el.querySelectorAll("span.tx-wiki")) {
-		let rawLink = e as HTMLSpanElement
-		// put rendered wiki-link element to the end of el.childNodes
-		MarkdownRenderer.renderMarkdown(
+  for (const e of el.querySelectorAll("span.tx-wiki")) {
+    let rawLink = e as HTMLSpanElement
+    // put rendered wiki-link element to the end of el.childNodes
+    MarkdownRenderer.renderMarkdown(
       rawLink.innerText,
       el,
       ctx.sourcePath,
       null
     );
-		// Get rendered wiki-link element
-		let temp = el.lastElementChild;
+    // Get rendered wiki-link element
+    let temp = el.lastElementChild;
 
-		// Check if text is rendered as expected
-		if (
+    // Check if text is rendered as expected
+    if (
       temp.tagName === "P" &&
       temp.childNodes.length === 1 &&
       temp.childNodes[0].nodeName === "A"
     ) {
-			let renderedLink = temp.childNodes[0];
-			// Replace raw wiki-link with rendered one
-			rawLink.parentNode.replaceChild(renderedLink,rawLink);
+      let renderedLink = temp.childNodes[0];
+      // Replace raw wiki-link with rendered one
+      rawLink.parentNode.replaceChild(renderedLink,rawLink);
     } else {
       console.error(rawLink.innerText,temp);
       throw new TypeError("Unexpected rendered HTMLElement");
     }
-		// Remove temp
-		el.removeChild(temp);
-	}
+    // Remove temp
+    el.removeChild(temp);
+  }
 }
