@@ -1,8 +1,7 @@
 import {
   MarkdownPostProcessorContext,
   MarkdownRenderer,
-  Plugin,
-  VaultEx,
+  Plugin
 } from "obsidian";
 import MarkdownIt from "markdown-it";
 import mTable from "markdown-it-multimd-table";
@@ -15,7 +14,7 @@ export default class TableExtended extends Plugin {
   async onload(): Promise<void> {
     console.log("loading table-extended");
 
-    const wikiRegex = /(?:(?<!\\)!)?\[\[([^\x00-\x1f|]+?)(?:\\?\|([\s\S]+?))?\]\]/;
+    const wikiRegex = /(?:(?<!\\)!)?\[\[([^\x00-\x1f|]+?)(?:\\?\|([^\x00-\x1f|]+?))?\]\]/;
 
     // Initialize mdParaser with default presets
     // Also load plugins
@@ -37,7 +36,8 @@ export default class TableExtended extends Plugin {
 
     // Read Obsidian's config to keep "strictLineBreaks" option in sync
     this.mdParser.set({
-      breaks: !(<VaultEx>this.app.vault).getConfig("strictLineBreaks"),
+      // @ts-ignore As this is undocumented
+      breaks: !this.app.vault.getConfig("strictLineBreaks"),
     });
   }
 
@@ -78,7 +78,7 @@ function processBlock(
       rawLink.parentNode.replaceChild(renderedLink,rawLink);
     } else {
       console.error(rawLink.innerText,temp);
-      throw new TypeError("Unexpected rendered HTMLElement");
+      console.error("Unexpected rendered HTMLElement, keeping the raw element");
     }
     // Remove temp
     el.removeChild(temp);
