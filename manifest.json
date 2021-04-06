@@ -1,10 +1,10 @@
 {
-	"id": "table-extended",
-	"name": "Table Extended",
-	"version": "1.0.0",
-	"minAppVersion": "0.10.12",
-	"description": "Enable extended table support with MultiMarkdown 6 syntax",
-	"author": "AidenLx",
-	"authorUrl": "https://github.com/AidenLx/",
-	"isDesktopOnly": false
+  "id": "table-extended",
+  "name": "Table Extended",
+  "version": "1.0.1",
+  "minAppVersion": "0.10.12",
+  "description": "Enable extended table support with MultiMarkdown 6 syntax",
+  "author": "AidenLx",
+  "authorUrl": "https://github.com/AidenLx/",
+  "isDesktopOnly": false
 }
