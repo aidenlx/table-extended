@@ -2,6 +2,7 @@ import {
   MarkdownPostProcessorContext,
   MarkdownRenderer,
   Plugin,
+	VaultEx,
 } from "obsidian";
 import MarkdownIt from "markdown-it";
 import mTable from "markdown-it-multimd-table";
@@ -39,10 +40,8 @@ export default class TableExtended extends Plugin {
     );
 
 		// Read Obsidian's config to keep "strictLineBreaks" option in sync
-		this.app.vault.adapter.read(".obsidian/config").then((result) => {
-			const config = JSON.parse(result);
-			this.mdParser.set({ breaks: !config.strictLineBreaks })
-		})
+		this.mdParser.set({ breaks: !(<VaultEx>this.app.vault).getConfig("strictLineBreaks") })
+
   }
 
   onunload() {
