@@ -51,18 +51,35 @@ function processBlock(
 	el: HTMLElement,
 	ctx: MarkdownPostProcessorContext
 ) {
+	// import render results
 	const result = this.mdParser.render(src);
 	el.innerHTML = result;
 
-	for (const rawLink of el.querySelectorAll("span.tx-wiki")) {
+	for (const e of el.querySelectorAll("span.tx-wiki")) {
+		let rawLink = e as HTMLSpanElement
 		// put rendered wiki-link element to the end of el.childNodes
 		MarkdownRenderer.renderMarkdown(
-			(rawLink as HTMLSpanElement).innerText,
-			el, ctx.sourcePath, null );
+      rawLink.innerText,
+      el,
+      ctx.sourcePath,
+      null
+    );
 		// Get rendered wiki-link element
 		let temp = el.lastElementChild;
-		// Replace raw wiki-link with rendered one
-		rawLink.outerHTML = temp.innerHTML; // use innerHTML to extract <p><!--rendered---></p>
+
+		// Check if text is rendered as expected
+		if (
+      temp.tagName === "P" &&
+      temp.childNodes.length === 1 &&
+      temp.childNodes[0].nodeName === "A"
+    ) {
+			let renderedLink = temp.childNodes[0];
+			// Replace raw wiki-link with rendered one
+			rawLink.parentNode.replaceChild(renderedLink,rawLink);
+    } else {
+      console.error(rawLink.innerText,temp);
+      throw new TypeError("Unexpected rendered HTMLElement");
+    }
 		// Remove temp
 		el.removeChild(temp);
 	}
