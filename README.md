@@ -16,11 +16,15 @@ This plugin brings [MultiMarkdown table syntax][mmd6-table] to Obsidian, which p
 - Block-level elements such as lists, codes...
 - Omitted table header
 
-
-
 [mmd6]: https://fletcher.github.io/MultiMarkdown-6/
 [mdit]: https://markdown-it.github.io/
 [mmdt]: https://github.com/RedBug312/markdown-it-multimd-table
+
+## Known issue
+
+This plugin is not yet compatible with [Advanced Tables](https://github.com/tgrosinger/advanced-tables-obsidian), as its auto-formatting would break the mmd6 table syntax. 
+
+Related issue: [advanced-tables-obsidian #59](https://github.com/tgrosinger/advanced-tables-obsidian/issues/59#issuecomment-812886995)
 
 ## How to use
 
