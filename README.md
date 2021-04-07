@@ -2,6 +2,8 @@
 
 Extend basic table in Obsidian with MultiMarkdown table syntax.
 
+![20210407084626](https://img.aidenlx.top/picgo/20210407084626.png)
+
 ## Intro
 
 Obsidian's [built-in table syntax](https://help.obsidian.md/How+to/Format+your+notes#tables) can only define the basics for tables. When users try to apply complex tables with `colspan` or multiple headers, their only option is to fall back to raw HTML, which is difficult to read and edit.
