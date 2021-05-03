@@ -7,6 +7,7 @@ import MarkdownIt from "markdown-it";
 import mTable from "markdown-it-multimd-table";
 import mFootnote from "markdown-it-footnote";
 import mdRegex from "@gerhobbelt/markdown-it-regexp";
+import mdMark from "markdown-it-mark"
 
 export default class TableExtended extends Plugin {
   mdParser: MarkdownIt;
@@ -18,8 +19,9 @@ export default class TableExtended extends Plugin {
 
     // Initialize mdParaser with default presets
     // Also load plugins
-    this.mdParser = MarkdownIt()
+    this.mdParser = MarkdownIt({html: true,})
       .use(mFootnote)
+      .use(mdMark)
       .use(mTable, {
         multiline: true,
         rowspan: true,
