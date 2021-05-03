@@ -13,6 +13,7 @@
   "license": "MIT",
   "devDependencies": {
     "@gerhobbelt/markdown-it-regexp": "^0.6.0-12",
+    "@release-it/bumper": "^2.0.0",
     "@release-it/conventional-changelog": "^2.0.1",
     "@rollup/plugin-commonjs": "^15.1.0",
     "@rollup/plugin-json": "^4.1.0",
