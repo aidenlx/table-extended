@@ -59,28 +59,22 @@ function processBlock(
 
   for (const e of el.querySelectorAll("span.tx-wiki")) {
     let rawLink = e as HTMLSpanElement
+    const rawText = rawLink.innerText;
     // put rendered wiki-link element to the end of el.childNodes
-    MarkdownRenderer.renderMarkdown(
-      rawLink.innerText,
-      el,
-      ctx.sourcePath,
-      null
-    );
+    MarkdownRenderer.renderMarkdown(rawText, el, ctx.sourcePath, null);
     // Get rendered wiki-link element
     let temp = el.lastElementChild;
 
-    // Check if text is rendered as expected
-    if (
-      temp.tagName === "P" &&
-      temp.childNodes.length === 1 &&
-      temp.childNodes[0].nodeName === "A"
-    ) {
-      let renderedLink = temp.childNodes[0];
+    const selector = rawText.startsWith("!")
+      ? ":scope > span.internal-embed"
+      : ":scope > a.internal-link";
+    const renderedLink = temp.querySelector(selector);
+    if (renderedLink) {
       // Replace raw wiki-link with rendered one
-      rawLink.parentNode.replaceChild(renderedLink,rawLink);
+      rawLink.parentNode.replaceChild(renderedLink, rawLink);
     } else {
-      console.error(rawLink.innerText,temp);
-      console.error("Unexpected rendered HTMLElement, keeping the raw element");
+      console.error(rawLink.innerText, temp);
+      console.error("No match found, keeping the raw element");
     }
     // Remove temp
     el.removeChild(temp);
