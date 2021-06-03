@@ -91,7 +91,7 @@ For more detailed guide, check [markdown-it-multimd-table README](mmdtg) and [Mu
 
 ## Compatibility
 
-The required API feature is only available for Obsidian v${min}+.
+The required API feature is only available for Obsidian v0.10.12+.
 
 ## Installation
 

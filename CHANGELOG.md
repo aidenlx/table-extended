@@ -1,3 +1,10 @@
+## [1.1.1](https://github.com/alx-plugins/table-extended/compare/1.1.0...1.1.1) (2021-06-03)
+
+
+### Bug Fixes
+
+* fix internal embeds not parsed properly ([ef09fd2](https://github.com/alx-plugins/table-extended/commit/ef09fd281cbdc22beb864e1ab7b7a27d65a78830))
+
 # [1.1.0](https://github.com/alx-plugins/table-extended/compare/1.0.1...1.1.0) (2021-05-03)
 
 
