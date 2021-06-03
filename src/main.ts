@@ -1,13 +1,13 @@
 import {
   MarkdownPostProcessorContext,
   MarkdownRenderer,
-  Plugin
+  Plugin,
 } from "obsidian";
 import MarkdownIt from "markdown-it";
 import mTable from "markdown-it-multimd-table";
 import mFootnote from "markdown-it-footnote";
 import mdRegex from "@gerhobbelt/markdown-it-regexp";
-import mdMark from "markdown-it-mark"
+import mdMark from "markdown-it-mark";
 
 export default class TableExtended extends Plugin {
   mdParser: MarkdownIt;
@@ -15,11 +15,12 @@ export default class TableExtended extends Plugin {
   async onload(): Promise<void> {
     console.log("loading table-extended");
 
-    const wikiRegex = /(?:(?<!\\)!)?\[\[([^\x00-\x1f|]+?)(?:\\?\|([^\x00-\x1f|]+?))?\]\]/;
+    const wikiRegex =
+      /(?:(?<!\\)!)?\[\[([^\x00-\x1f|]+?)(?:\\?\|([^\x00-\x1f|]+?))?\]\]/;
 
     // Initialize mdParaser with default presets
     // Also load plugins
-    this.mdParser = MarkdownIt({html: true,})
+    this.mdParser = MarkdownIt({ html: true })
       .use(mFootnote)
       .use(mdMark)
       .use(mTable, {
@@ -27,11 +28,12 @@ export default class TableExtended extends Plugin {
         rowspan: true,
         headerless: true,
       })
-      .use(mdRegex(
+      .use(
+        mdRegex(
           wikiRegex,
           (match: string, setup: unknown, options: unknown) =>
-            `<span class="tx-wiki">${match[0]}</span>`
-        )
+            `<span class="tx-wiki">${match[0]}</span>`,
+        ),
       );
 
     this.registerMarkdownCodeBlockProcessor("tx", processBlock.bind(this));
@@ -51,14 +53,14 @@ export default class TableExtended extends Plugin {
 function processBlock(
   src: string,
   el: HTMLElement,
-  ctx: MarkdownPostProcessorContext
+  ctx: MarkdownPostProcessorContext,
 ) {
   // import render results
   const result = this.mdParser.render(src);
   el.innerHTML = result;
 
   for (const e of el.querySelectorAll("span.tx-wiki")) {
-    let rawLink = e as HTMLSpanElement
+    let rawLink = e as HTMLSpanElement;
     const rawText = rawLink.innerText;
     // put rendered wiki-link element to the end of el.childNodes
     MarkdownRenderer.renderMarkdown(rawText, el, ctx.sourcePath, null);
