@@ -2,7 +2,7 @@
 
 Extend basic table in Obsidian with MultiMarkdown table syntax.
 
-![20210407084626](https://img.aidenlx.top/picgo/20210407084626.png)
+![image](https://user-images.githubusercontent.com/31102694/123046427-ad89b780-d42e-11eb-9588-b7028954bcfc.png)
 
 - [Table Extended](#table-extended)
   - [Intro](#intro)
