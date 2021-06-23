@@ -1,3 +1,10 @@
+# [1.3.0](https://github.com/alx-plugins/table-extended/compare/1.2.0...1.3.0) (2021-06-23)
+
+
+### Features
+
+* add `-tx-` prefix indicator, mark extended native syntax expermental ([d4efa3f](https://github.com/alx-plugins/table-extended/commit/d4efa3f3fe5397c6a33ee09a0bb1c9f28f34f344))
+
 # [1.2.0](https://github.com/alx-plugins/table-extended/compare/1.1.1...1.2.0) (2021-06-23)
 
 
