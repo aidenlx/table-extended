@@ -1,13 +1,13 @@
+import mdRegex from "@gerhobbelt/markdown-it-regexp";
+import MarkdownIt from "markdown-it";
+import mFootnote from "markdown-it-footnote";
+import mdMark from "markdown-it-mark";
+import mTable from "markdown-it-multimd-table";
 import {
   MarkdownPostProcessorContext,
   MarkdownRenderer,
   Plugin,
 } from "obsidian";
-import MarkdownIt from "markdown-it";
-import mTable from "markdown-it-multimd-table";
-import mFootnote from "markdown-it-footnote";
-import mdRegex from "@gerhobbelt/markdown-it-regexp";
-import mdMark from "markdown-it-mark";
 
 const wikiRegex =
   /(?:(?<!\\)!)?\[\[([^\x00-\x1f|]+?)(?:\\?\|([^\x00-\x1f|]+?))?\]\]/;
