@@ -84,7 +84,7 @@ would be render as:
 </table>
 </div>
 
-For more detailed guide, check [markdown-it-multimd-table README](mmdtg) and [MultiMarkdown User's Guide][mmd6-table]
+For more detailed guide, check [markdown-it-multimd-table README][mmdtg] and [MultiMarkdown User's Guide][mmd6-table]
 
 [mmdtg]: https://github.com/RedBug312/markdown-it-multimd-table/blob/master/README.md#usage
 [mmd6-table]: https://fletcher.github.io/MultiMarkdown-6/syntax/tables.html
