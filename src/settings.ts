@@ -11,7 +11,7 @@ export interface TableExtendedSettings {
 }
 
 export const DEFAULT_SETTINGS: TableExtendedSettings = {
-  handleNativeTable: true,
+  handleNativeTable: false,
 };
 
 type option = {
@@ -31,11 +31,13 @@ export class TableExtendedSettingTab extends PluginSettingTab {
   display(): void {
     this.containerEl.empty();
     new Setting(this.containerEl)
-      .setName("Extended Native Table Syntax")
+      .setName("Expermental: Extended Native Table Syntax")
       .setDesc(
         createFragment((descEl) => {
+          descEl.appendText("Use extended syntax on all native tables");
+          descEl.appendChild(createEl("br"));
           descEl.appendText(
-            "Disbale this option if some table features is broken, and open new issue in ",
+            "Some table features may be broken, if found any, please open new issue in ",
           );
           descEl.appendChild(
             createEl("a", {

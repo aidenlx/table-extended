@@ -58,7 +58,21 @@ export default class TableExtended extends Plugin {
     processInternalLink(el, ctx.sourcePath);
   };
 
-  processBlock = (
+  processTextSection = (el: HTMLElement, ctx: MarkdownPostProcessorContext) => {
+    let raw = getRawSection(el, ctx);
+    if (!raw) {
+      console.error("RawSection null, escaping...");
+      return;
+    }
+    if (!raw.startsWith("-tx-\n")) return;
+    raw = raw.replace(/^-tx-\n/, "");
+
+    el.empty();
+    el.innerHTML = this.mdParser.render(raw);
+    processInternalLink(el, ctx.sourcePath);
+  };
+
+  processCodeBlock = (
     src: string,
     el: HTMLElement,
     ctx: MarkdownPostProcessorContext,
@@ -78,7 +92,8 @@ export default class TableExtended extends Plugin {
     if (this.settings.handleNativeTable)
       MarkdownPreviewRenderer.registerPostProcessor(this.processTable);
 
-    this.registerMarkdownCodeBlockProcessor("tx", this.processBlock);
+    this.registerMarkdownCodeBlockProcessor("tx", this.processCodeBlock);
+    this.registerMarkdownPostProcessor(this.processTextSection);
 
     // Read Obsidian's config to keep "strictLineBreaks" option in sync
     this.mdParser.set({

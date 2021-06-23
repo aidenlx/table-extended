@@ -4,6 +4,20 @@ Extend basic table in Obsidian with MultiMarkdown table syntax.
 
 ![20210407084626](https://img.aidenlx.top/picgo/20210407084626.png)
 
+- [Table Extended](#table-extended)
+  - [Intro](#intro)
+  - [Known issue](#known-issue)
+  - [How to use](#how-to-use)
+    - [Expermental: Extended Native Syntax](#expermental-extended-native-syntax)
+    - [Multiline](#multiline)
+    - [Multiline Header](#multiline-header)
+    - [Headerless](#headerless)
+  - [Compatibility](#compatibility)
+  - [Installation](#installation)
+    - [From Obsidian](#from-obsidian)
+    - [From GitHub](#from-github)
+  - [Behind the scene](#behind-the-scene)
+
 ## Intro
 
 Obsidian's [built-in table syntax](https://help.obsidian.md/How+to/Format+your+notes#tables) can only define the basics for tables. When users try to apply complex tables with `colspan` or multiple headers, their only option is to fall back to raw HTML, which is difficult to read and edit.
@@ -13,9 +27,9 @@ This plugin brings [MultiMarkdown table syntax][mmd6-table] to Obsidian, which p
 - [Cell spans over columns](#colspan)
 - [Cell spans over rows](#rowspan)
 - [Block-level elements](#multiline) such as lists, codes...
-- [Multiple table headers](#multiline-header) (only supported in `tx` code block)
-- Table caption (only supported in `tx` code block)
-- [Omitted table header](#headerless) (only supported in `tx` code block)
+- [Multiple table headers](#multiline-header)
+- Table caption
+- [Omitted table header](#headerless)
 
 [mmd6]: https://fletcher.github.io/MultiMarkdown-6/
 [mdit]: https://markdown-it.github.io/
@@ -25,13 +39,83 @@ This plugin brings [MultiMarkdown table syntax][mmd6-table] to Obsidian, which p
 
 - This plugin is not yet compatible with [Advanced Tables](https://github.com/tgrosinger/advanced-tables-obsidian), as its auto-formatting would break the mmd6 table syntax.
   - Related issue: [advanced-tables-obsidian #59](https://github.com/tgrosinger/advanced-tables-obsidian/issues/59#issuecomment-812886995)
-- backlinks and forward links are disabled in `tx` codeblock
-  - Related issue: [
-Internal Links inside code block wont create backlinks](https://forum.obsidian.md/t/internal-links-inside-code-block-wont-create-backlinks/12288)
+- footnote not working properly: [#5](https://github.com/alx-plugins/table-extended/issues/5)
+- not yet compatible with [better-fn](https://github.com/alx-plugins/better-fn)
 
 ## How to use
 
-With plugin installed, extended syntax is allowed in Obsidian's regular tables:
+The latest version use a new syntax to indicate extended tables in favor of fenced `tx` code blocks, which allow better support for backlinks and forward links, which use a leading `-tx-` before table:
+
+PS: For expermental extended native syntax support which eliminate the need for `-tx-` prefix, check [here](#expermental-extended-native-syntax)
+
+```md
+
+-tx-
+|             |          Grouping           || 
+First Header  | Second Header | Third Header | 
+ ------------ | :-----------: | -----------: | 
+Content       |          *Long Cell*        || 
+Content       |   **Cell**    |         Cell | 
+New section   |     More      |         Data | 
+And more      | With an escaped '\|'       || 
+[Prototype table]
+
+```
+
+would be render as: 
+
+<div class="block-language-tx"><table>
+<caption id="prototypetable">Prototype table</caption>
+<thead>
+<tr>
+<th></th>
+<th style="text-align:center" colspan="2">Grouping</th>
+</tr>
+<tr>
+<th>First Header</th>
+<th style="text-align:center">Second Header</th>
+<th style="text-align:right">Third Header</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Content</td>
+<td style="text-align:center" colspan="2"><em>Long Cell</em></td>
+</tr>
+<tr>
+<td>Content</td>
+<td style="text-align:center"><strong>Cell</strong></td>
+<td style="text-align:right">Cell</td>
+</tr>
+</tbody>
+<tbody>
+<tr>
+<td>New section</td>
+<td style="text-align:center">More</td>
+<td style="text-align:right">Data</td>
+</tr>
+<tr>
+<td>And more</td>
+<td style="text-align:center" colspan="2">With an escaped '|'</td>
+</tr>
+</tbody>
+</table>
+</div>
+
+For more detailed guide, check [markdown-it-multimd-table README][mmdtg] and [MultiMarkdown User's Guide][mmd6-table]
+
+[mmdtg]: https://github.com/RedBug312/markdown-it-multimd-table/blob/master/README.md#usage
+[mmd6-table]: https://fletcher.github.io/MultiMarkdown-6/syntax/tables.html
+
+### Expermental: Extended Native Syntax
+
+Note: the following features are not supported: 
+
+- [Multiple table headers](#multiline-header)
+- Table caption
+- [Omitted table header](#headerless)
+
+Extended syntax is allowed in Obsidian's regular tables when option is enabled is the setting tab:
 
 The following table:
 
@@ -78,11 +162,6 @@ would be render as:
 </tbody>
 </table>
 </div>
-
-For more detailed guide, check [markdown-it-multimd-table README][mmdtg] and [MultiMarkdown User's Guide][mmd6-table]
-
-[mmdtg]: https://github.com/RedBug312/markdown-it-multimd-table/blob/master/README.md#usage
-[mmd6-table]: https://fletcher.github.io/MultiMarkdown-6/syntax/tables.html
 
 ### Multiline
 
@@ -148,7 +227,6 @@ This is parsed below:
 ### Rowspan
 
 `^^` indicates cells being merged above.<br>
-Feature contributed by [pmccloghrylaing](https://github.com/pmccloghrylaing).
 
 ```markdown
 Stage | Direct Products | ATP Yields
@@ -206,8 +284,6 @@ This is parsed below:
 
 ### Multiline Header
 
-Note: only supported in `tx` code block
-
 ```tx
 |             |          Grouping           ||
 First Header  | Second Header | Third Header |
@@ -240,7 +316,6 @@ rendered as:
 ### Headerless
 
 Table header can be eliminated.
-Note: only supported in `tx` code block
 
 ```markdown
 |--|--|--|--|--|--|--|--|
