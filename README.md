@@ -343,7 +343,7 @@ This is parsed below:
 
 ## Compatibility
 
-The required API feature is only available for Obsidian v0.10.12+.
+The required API feature is only available for Obsidian v0.12.0+.
 
 ## Installation
 

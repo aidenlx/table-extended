@@ -1,3 +1,11 @@
+# [1.2.0](https://github.com/alx-plugins/table-extended/compare/1.1.1...1.2.0) (2021-06-23)
+
+
+### Features
+
+* **settings.ts:** add option to disable extended native syntax ([6042c75](https://github.com/alx-plugins/table-extended/commit/6042c75332d75c68b5cb901f84f4a49e14ad3cbf))
+* support codeblock-free mmd table syntax ([9d823dc](https://github.com/alx-plugins/table-extended/commit/9d823dc6361f8d3efa06a6a2d699dc179c815af1)), closes [#4](https://github.com/alx-plugins/table-extended/issues/4) [#2](https://github.com/alx-plugins/table-extended/issues/2)
+
 ## [1.1.1](https://github.com/alx-plugins/table-extended/compare/1.1.0...1.1.1) (2021-06-03)
 
 

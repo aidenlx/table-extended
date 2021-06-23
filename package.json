@@ -1,6 +1,6 @@
 {
   "name": "table-extended",
-  "version": "1.1.1",
+  "version": "1.2.0",
   "description": "Enable extended table support with MultiMarkdown 6 syntax",
   "main": "main.js",
   "scripts": {
