@@ -1,8 +1,7 @@
-import typescript from "@rollup/plugin-typescript";
-import { nodeResolve } from "@rollup/plugin-node-resolve";
 import commonjs from "@rollup/plugin-commonjs";
 import json from "@rollup/plugin-json";
-import nodePolyfills from "rollup-plugin-polyfill-node";
+import { nodeResolve } from "@rollup/plugin-node-resolve";
+import typescript from "@rollup/plugin-typescript";
 
 const isProd = process.env.BUILD === "production";
 
@@ -23,11 +22,5 @@ export default {
     banner,
   },
   external: ["obsidian"],
-  plugins: [
-    typescript(),
-    nodeResolve({ browser: true }),
-    nodePolyfills({ include: ["punycode"] }),
-    commonjs(),
-    json(),
-  ],
+  plugins: [typescript(), nodeResolve({ browser: true }), commonjs(), json()],
 };
