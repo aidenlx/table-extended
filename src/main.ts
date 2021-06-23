@@ -5,13 +5,29 @@ import mdMark from "markdown-it-mark";
 import mTable from "markdown-it-multimd-table";
 import {
   MarkdownPostProcessorContext,
+  MarkdownPreviewRenderer,
   MarkdownRenderer,
+  MarkdownView,
   Plugin,
 } from "obsidian";
+import {
+  DEFAULT_SETTINGS,
+  TableExtendedSettings,
+  TableExtendedSettingTab,
+} from "settings";
 
 const wikiRegex =
   /(?:(?<!\\)!)?\[\[([^\x00-\x1f|]+?)(?:\\?\|([^\x00-\x1f|]+?))?\]\]/;
 export default class TableExtended extends Plugin {
+  settings: TableExtendedSettings = DEFAULT_SETTINGS;
+  async loadSettings() {
+    this.settings = { ...this.settings, ...(await this.loadData()) };
+  }
+
+  async saveSettings() {
+    await this.saveData(this.settings);
+  }
+
   mdParser = MarkdownIt({ html: true })
     .use(mFootnote)
     .use(mdMark)
@@ -28,22 +44,64 @@ export default class TableExtended extends Plugin {
       ),
     );
 
+  processTable = (el: HTMLElement, ctx: MarkdownPostProcessorContext) => {
+    if (!el.querySelector("table")) return;
+
+    const raw = getRawSection(el, ctx);
+    if (!raw) {
+      console.error("RawSection null, escaping...");
+      return;
+    }
+
+    el.empty();
+    el.innerHTML = this.mdParser.render(raw);
+    processInternalLink(el, ctx.sourcePath);
+  };
+
+  processBlock = (
+    src: string,
+    el: HTMLElement,
+    ctx: MarkdownPostProcessorContext,
+  ) => {
+    // import render results
+    const result = this.mdParser.render(src);
+    el.innerHTML = result;
+
+    processInternalLink(el, ctx.sourcePath);
+  };
+
   async onload(): Promise<void> {
     console.log("loading table-extended");
+    await this.loadSettings();
+    this.addSettingTab(new TableExtendedSettingTab(this.app, this));
 
-    this.registerMarkdownCodeBlockProcessor("tx", processBlock.bind(this));
-    this.registerMarkdownPostProcessor(processTable.bind(this));
+    if (this.settings.handleNativeTable)
+      MarkdownPreviewRenderer.registerPostProcessor(this.processTable);
+
+    this.registerMarkdownCodeBlockProcessor("tx", this.processBlock);
 
     // Read Obsidian's config to keep "strictLineBreaks" option in sync
     this.mdParser.set({
       // @ts-ignore As this is undocumented
       breaks: !this.app.vault.getConfig("strictLineBreaks"),
     });
+    this.app.workspace.onLayoutReady(this.refresh);
   }
 
   onunload() {
     console.log("unloading table-extended");
+    MarkdownPreviewRenderer.unregisterPostProcessor(this.processTable);
+    this.refresh();
   }
+  /** refresh opened MarkdownView */
+  refresh = () =>
+    this.app.workspace.iterateAllLeaves((leaf) =>
+      setTimeout(() => {
+        if (leaf.view instanceof MarkdownView) {
+          leaf.view.previewMode.rerender(true);
+        }
+      }, 200),
+    );
 }
 
 const getRawSection = (
@@ -61,37 +119,6 @@ const getRawSection = (
       .join("\n");
   } else return null;
 };
-
-function processTable(
-  this: TableExtended,
-  el: HTMLElement,
-  ctx: MarkdownPostProcessorContext,
-) {
-  if (!el.querySelector("table")) return;
-
-  const raw = getRawSection(el, ctx);
-  if (!raw) {
-    console.error("RawSection null, escaping...");
-    return;
-  }
-
-  el.empty();
-  el.innerHTML = this.mdParser.render(raw);
-  processInternalLink(el, ctx.sourcePath);
-}
-
-function processBlock(
-  this: TableExtended,
-  src: string,
-  el: HTMLElement,
-  ctx: MarkdownPostProcessorContext,
-) {
-  // import render results
-  const result = this.mdParser.render(src);
-  el.innerHTML = result;
-
-  processInternalLink(el, ctx.sourcePath);
-}
 
 const processInternalLink = (el: HTMLElement, sourcePath: string) => {
   for (const e of el.querySelectorAll("span.tx-wiki")) {
