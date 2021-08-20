@@ -1,10 +1,10 @@
-import TableExtended from "main";
 import {
   App,
   MarkdownPreviewRenderer,
   PluginSettingTab,
   Setting,
 } from "obsidian";
+import TableExtended from "tx-main";
 
 export interface TableExtendedSettings {
   handleNativeTable: boolean;
