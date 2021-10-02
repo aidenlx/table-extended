@@ -1,3 +1,10 @@
+## [1.3.1](https://github.com/aidenlx/table-extended/compare/1.3.0...1.3.1) (2021-10-02)
+
+
+### Bug Fixes
+
+* fix failed to get raw markdown text; fix release script ([4584be8](https://github.com/aidenlx/table-extended/commit/4584be839430fd80d5e7664c91cb914bf725d71e)), closes [#13](https://github.com/aidenlx/table-extended/issues/13) [#8](https://github.com/aidenlx/table-extended/issues/8)
+
 # [1.3.0](https://github.com/alx-plugins/table-extended/compare/1.2.0...1.3.0) (2021-06-23)
 
 
