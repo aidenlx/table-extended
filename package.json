@@ -74,8 +74,8 @@
     "github": {
       "release": true,
       "assets": [
-        "main.js",
-        "manifest.json"
+        "build/main.js",
+        "build/manifest.json"
       ],
       "proxy": "http://127.0.0.1:7890",
       "releaseName": "${version}"

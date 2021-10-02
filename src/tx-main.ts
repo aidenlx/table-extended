@@ -16,6 +16,10 @@ import {
   TableExtendedSettingTab,
 } from "settings";
 
+const sleep = async (ms: number) => {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+};
+
 const wikiRegex =
   /(?:(?<!\\)!)?\[\[([^\x00-\x1f|]+?)(?:\\?\|([^\x00-\x1f|]+?))?\]\]/;
 export default class TableExtended extends Plugin {
@@ -44,12 +48,12 @@ export default class TableExtended extends Plugin {
       ),
     );
 
-  processTable = (el: HTMLElement, ctx: MarkdownPostProcessorContext) => {
+  processTable = async (el: HTMLElement, ctx: MarkdownPostProcessorContext) => {
     if (!el.querySelector("table")) return;
 
-    const raw = getRawSection(el, ctx);
+    const raw = await getRawSection(el, ctx);
     if (!raw) {
-      console.error("RawSection null, escaping...");
+      console.warn("failed to get Markdown text, escaping...", el.innerHTML);
       return;
     }
 
@@ -58,10 +62,21 @@ export default class TableExtended extends Plugin {
     processInternalLink(el, ctx.sourcePath);
   };
 
-  processTextSection = (el: HTMLElement, ctx: MarkdownPostProcessorContext) => {
-    let raw = getRawSection(el, ctx);
+  processTextSection = async (
+    el: HTMLElement,
+    ctx: MarkdownPostProcessorContext,
+  ) => {
+    const firstEl = el.firstElementChild;
+    if (
+      !(
+        firstEl instanceof HTMLParagraphElement &&
+        firstEl.innerHTML.startsWith("-tx-\n")
+      )
+    )
+      return;
+    let raw = await getRawSection(el, ctx);
     if (!raw) {
-      console.error("RawSection null, escaping...");
+      console.warn("failed to get Markdown text, escaping...", el.innerHTML);
       return;
     }
     if (!raw.startsWith("-tx-\n")) return;
@@ -119,20 +134,26 @@ export default class TableExtended extends Plugin {
     );
 }
 
-const getRawSection = (
+const getRawSection = async (
   sectionEl: HTMLElement,
   ctx: MarkdownPostProcessorContext,
-): null | string => {
-  const info: null | { text: string; lineStart: number; lineEnd: number } =
-    // @ts-ignore
-    ctx.getSectionInfo(sectionEl);
-  if (info) {
-    const { text, lineStart, lineEnd } = info;
-    return text
-      .split("\n")
-      .slice(lineStart, lineEnd + 1)
-      .join("\n");
-  } else return null;
+): Promise<string | null> => {
+  let tries = 0,
+    info: null | { text: string; lineStart: number; lineEnd: number };
+  while (tries < 5) {
+    info = ctx.getSectionInfo(sectionEl);
+    if (info) {
+      const { text, lineStart, lineEnd } = info;
+      return text
+        .split("\n")
+        .slice(lineStart, lineEnd + 1)
+        .join("\n");
+    } else {
+      tries++;
+      await sleep(200);
+    }
+  }
+  return null;
 };
 
 const processInternalLink = (el: HTMLElement, sourcePath: string) => {
