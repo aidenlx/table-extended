@@ -70,7 +70,7 @@ export default class TableExtended extends Plugin {
     if (
       !(
         firstEl instanceof HTMLParagraphElement &&
-        firstEl.innerHTML.startsWith("-tx-\n")
+        firstEl.innerHTML.startsWith("-tx-")
       )
     )
       return;
