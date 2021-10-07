@@ -1,3 +1,10 @@
+## [1.3.2](https://github.com/aidenlx/table-extended/compare/1.3.1...1.3.2) (2021-10-07)
+
+
+### Bug Fixes
+
+* fix prefix not detected when strict line break is disabled ([38f27ca](https://github.com/aidenlx/table-extended/commit/38f27ca8ebc2fb44cc671b09fd7217848f8cff91)), closes [#20](https://github.com/aidenlx/table-extended/issues/20)
+
 ## [1.3.1](https://github.com/aidenlx/table-extended/compare/1.3.0...1.3.1) (2021-10-02)
 
 
