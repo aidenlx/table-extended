@@ -8,16 +8,12 @@ import TableExtended from "tx-main";
 
 export interface TableExtendedSettings {
   handleNativeTable: boolean;
+  forceNoParaResolve: boolean;
 }
 
 export const DEFAULT_SETTINGS: TableExtendedSettings = {
   handleNativeTable: false,
-};
-
-type option = {
-  k: keyof TableExtendedSettings;
-  name: string;
-  desc: string | DocumentFragment;
+  forceNoParaResolve: false,
 };
 
 export class TableExtendedSettingTab extends PluginSettingTab {
@@ -68,28 +64,4 @@ export class TableExtendedSettingTab extends PluginSettingTab {
           }),
       );
   }
-
-  options: option[] = [
-    {
-      k: "handleNativeTable",
-      name: "Extended Native Table Syntax",
-      desc: (() => {
-        const descEl = document.createDocumentFragment();
-        descEl.appendText(
-          "Disbale this option if some table features is broken",
-        );
-        descEl.appendChild(document.createElement("br"));
-        descEl.appendText("And open new issue in ");
-        descEl.appendChild(
-          createEl("a", {
-            text: "here",
-            attr: {
-              href: "https://github.com/alx-plugins/table-extended/issues",
-            },
-          }),
-        );
-        return descEl;
-      })(),
-    },
-  ];
 }

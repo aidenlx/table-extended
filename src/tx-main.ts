@@ -71,10 +71,17 @@ export default class TableExtended extends Plugin {
       const prefix = "-tx-\n",
         src = getSrcMD(el, ctx);
       if (!src) {
-        console.log(
-          "failed to get Markdown text, resolve text from <p> content...",
-        );
-        this.renderFromPara(firstEl, el);
+        if (this.settings.forceNoParaResolve) {
+          console.warn(
+            "failed to get Markdown text, escaping...",
+            el.innerHTML,
+          );
+        } else {
+          console.log(
+            "failed to get Markdown text, resolve text from <p> content...",
+          );
+          this.renderFromPara(firstEl, el);
+        }
       } else if (src.startsWith(prefix)) {
         this.renderFromMD(src.substring(prefix.length), el, ctx);
       }
