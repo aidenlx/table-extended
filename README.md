@@ -39,8 +39,8 @@ This plugin brings [MultiMarkdown table syntax][mmd6-table] to Obsidian, which p
 
 - This plugin is not yet compatible with [Advanced Tables](https://github.com/tgrosinger/advanced-tables-obsidian), as its auto-formatting would break the mmd6 table syntax.
   - Related issue: [advanced-tables-obsidian #59](https://github.com/tgrosinger/advanced-tables-obsidian/issues/59#issuecomment-812886995)
-- footnote not working properly: [#5](https://github.com/alx-plugins/table-extended/issues/5)
-- not yet compatible with [better-fn](https://github.com/alx-plugins/better-fn)
+- table with `-tx-` may sometimes ignore escape characters, for example, `\|` fails to escape `|` in table, only `\\|` works
+- extended native syntax may not work sometimes, with console output: `failed to get Markdown text, escaping...`
 
 ## How to use
 
