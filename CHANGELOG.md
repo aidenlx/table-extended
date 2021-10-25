@@ -1,3 +1,10 @@
+# [1.4.0](https://github.com/aidenlx/table-extended/compare/1.3.2...1.4.0) (2021-10-25)
+
+
+### Features
+
+* add support to footnote and math embeds; fix embeds not loaded ([c6fea5a](https://github.com/aidenlx/table-extended/commit/c6fea5a94c1c743ef95e38e0d4f79ede4352a401)), closes [#5](https://github.com/aidenlx/table-extended/issues/5) [#22](https://github.com/aidenlx/table-extended/issues/22) [#6](https://github.com/aidenlx/table-extended/issues/6) [#11](https://github.com/aidenlx/table-extended/issues/11)
+
 ## [1.3.2](https://github.com/aidenlx/table-extended/compare/1.3.1...1.3.2) (2021-10-07)
 
 
