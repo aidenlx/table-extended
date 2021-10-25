@@ -1,11 +1,9 @@
-import mdRegex from "@gerhobbelt/markdown-it-regexp";
 import MarkdownIt from "markdown-it";
-import mFootnote from "markdown-it-footnote";
-import mdMark from "markdown-it-mark";
 import mTable from "markdown-it-multimd-table";
 import {
   MarkdownPostProcessorContext,
   MarkdownPreviewRenderer,
+  MarkdownRenderChild,
   MarkdownRenderer,
   MarkdownView,
   Plugin,
@@ -19,6 +17,7 @@ import {
 const sleep = async (ms: number) => {
   return new Promise((resolve) => setTimeout(resolve, ms));
 };
+const INLINE_TYPE = "obsidian";
 
 const wikiRegex =
   /(?:(?<!\\)!)?\[\[([^\x00-\x1f|]+?)(?:\\?\|([^\x00-\x1f|]+?))?\]\]/;
@@ -32,71 +31,54 @@ export default class TableExtended extends Plugin {
     await this.saveData(this.settings);
   }
 
-  mdParser = MarkdownIt({ html: true })
-    .use(mFootnote)
-    .use(mdMark)
-    .use(mTable, {
+  constructor(...args: ConstructorParameters<typeof Plugin>) {
+    super(...args);
+    this.mdit = MarkdownIt({ html: true }).use(mTable, {
       multiline: true,
       rowspan: true,
       headerless: true,
-    })
-    .use(
-      mdRegex(
-        wikiRegex,
-        (match: string, setup: unknown, options: unknown) =>
-          `<span class="tx-wiki">${match[0]}</span>`,
-      ),
-    );
+    });
+    this.mdit.renderer.rules[INLINE_TYPE] = (tokens, idx) => {
+      return tokens[idx].content;
+    };
+  }
+  mdit: MarkdownIt;
+  renderTable(raw: string) {
+    let blockTokens = this.mdit.parse(raw, {});
+    for (const t of blockTokens) {
+      t.type === "inline" && (t.type = INLINE_TYPE);
+    }
+    return this.mdit.renderer.render(blockTokens, this.mdit.options, {});
+  }
 
-  processTable = async (el: HTMLElement, ctx: MarkdownPostProcessorContext) => {
+  processTable = (el: HTMLElement, ctx: MarkdownPostProcessorContext) => {
     if (!el.querySelector("table")) return;
 
-    const raw = await getRawSection(el, ctx);
+    const raw = getSrcMD(el, ctx);
     if (!raw) {
       console.warn("failed to get Markdown text, escaping...", el.innerHTML);
       return;
     }
-
     el.empty();
-    el.innerHTML = this.mdParser.render(raw);
-    processInternalLink(el, ctx.sourcePath);
+    this.renderFromMD(raw, el, ctx);
   };
-
-  processTextSection = async (
-    el: HTMLElement,
-    ctx: MarkdownPostProcessorContext,
-  ) => {
+  processTextSection = (el: HTMLElement, ctx: MarkdownPostProcessorContext) => {
     const firstEl = el.firstElementChild;
     if (
-      !(
-        firstEl instanceof HTMLParagraphElement &&
-        firstEl.innerHTML.startsWith("-tx-")
-      )
-    )
-      return;
-    let raw = await getRawSection(el, ctx);
-    if (!raw) {
-      console.warn("failed to get Markdown text, escaping...", el.innerHTML);
-      return;
+      firstEl instanceof HTMLParagraphElement &&
+      firstEl.innerHTML.startsWith("-tx-")
+    ) {
+      const prefix = "-tx-\n",
+        src = getSrcMD(el, ctx);
+      if (!src) {
+        console.log(
+          "failed to get Markdown text, resolve text from <p> content...",
+        );
+        this.renderFromPara(firstEl, el);
+      } else if (src.startsWith(prefix)) {
+        this.renderFromMD(src.substring(prefix.length), el, ctx);
+      }
     }
-    if (!raw.startsWith("-tx-\n")) return;
-    raw = raw.replace(/^-tx-\n/, "");
-
-    el.empty();
-    el.innerHTML = this.mdParser.render(raw);
-    processInternalLink(el, ctx.sourcePath);
-  };
-
-  processCodeBlock = (
-    src: string,
-    el: HTMLElement,
-    ctx: MarkdownPostProcessorContext,
-  ) => {
-    // import render results
-    const result = this.mdParser.render(src);
-    el.innerHTML = result;
-
-    processInternalLink(el, ctx.sourcePath);
   };
 
   async onload(): Promise<void> {
@@ -107,12 +89,11 @@ export default class TableExtended extends Plugin {
     if (this.settings.handleNativeTable)
       MarkdownPreviewRenderer.registerPostProcessor(this.processTable);
 
-    this.registerMarkdownCodeBlockProcessor("tx", this.processCodeBlock);
+    this.registerMarkdownCodeBlockProcessor("tx", this.renderFromMD);
     this.registerMarkdownPostProcessor(this.processTextSection);
 
     // Read Obsidian's config to keep "strictLineBreaks" option in sync
-    this.mdParser.set({
-      // @ts-ignore As this is undocumented
+    this.mdit.set({
       breaks: !this.app.vault.getConfig("strictLineBreaks"),
     });
     this.app.workspace.onLayoutReady(this.refresh);
@@ -132,55 +113,94 @@ export default class TableExtended extends Plugin {
         }
       }, 200),
     );
+
+  /**
+   * Fallback method, regular escape char will not take effect ()
+   */
+  renderFromPara = (textEl: HTMLParagraphElement, blockEl: HTMLElement) => {
+    let elMap = new Map<string, Element>();
+    // remove all br from strictLineBreak=false
+    textEl.querySelectorAll("br").forEach((br) => br.remove());
+    // extract html elements and save them in temp key-el map
+    for (let i = 0; i < textEl.children.length; i++) {
+      const el = textEl.children[i],
+        id = `!HTMLEL_${i}!`;
+      el.insertAdjacentText("afterend", id);
+      elMap.set(id, el);
+      el.remove();
+    }
+    if (!textEl.textContent) return;
+
+    const result = this.renderTable(textEl.textContent.replace(/^-tx-\n/, ""));
+    blockEl.empty();
+    blockEl.innerHTML = result;
+    // put el back to rendered table
+    let walk = document.createTreeWalker(blockEl, NodeFilter.SHOW_TEXT),
+      text: Text;
+    while ((text = walk.nextNode() as Text)) {
+      insertEl(text, elMap);
+    }
+    elMap.clear();
+  };
+  renderFromMD = (
+    src: string,
+    blockEl: HTMLElement,
+    ctx: MarkdownPostProcessorContext,
+  ) => {
+    let child = new MarkdownRenderChild(blockEl);
+    ctx.addChild(child);
+    // import render results
+    const result = this.renderTable(src);
+    blockEl.innerHTML = result;
+    for (const el of blockEl.querySelectorAll("td, th, caption")) {
+      let raw = el.textContent;
+      if (!raw?.trim()) continue;
+      el.textContent = null;
+      MarkdownRenderer.renderMarkdown(
+        raw,
+        el as HTMLElement,
+        ctx.sourcePath,
+        child,
+      );
+      let p = el.firstElementChild;
+      if (p) p.replaceWith(...p.childNodes);
+    }
+  };
 }
 
-const getRawSection = async (
+const getSrcMD = (
   sectionEl: HTMLElement,
   ctx: MarkdownPostProcessorContext,
-): Promise<string | null> => {
-  let tries = 0,
-    info: null | { text: string; lineStart: number; lineEnd: number };
-  while (tries < 5) {
-    info = ctx.getSectionInfo(sectionEl);
-    if (info) {
-      const { text, lineStart, lineEnd } = info;
-      return text
-        .split("\n")
-        .slice(lineStart, lineEnd + 1)
-        .join("\n");
-    } else {
-      tries++;
-      await sleep(200);
-    }
+): string | null => {
+  let info = ctx.getSectionInfo(sectionEl);
+  if (info) {
+    const { text, lineStart, lineEnd } = info;
+    return text
+      .split("\n")
+      .slice(lineStart, lineEnd + 1)
+      .join("\n");
+  } else {
+    return null;
   }
-  return null;
 };
 
-const processInternalLink = (el: HTMLElement, sourcePath: string) => {
-  for (const e of el.querySelectorAll("span.tx-wiki")) {
-    let rawLink = e as HTMLSpanElement;
-    const rawText = rawLink.innerText;
-    // put rendered wiki-link element to the end of el.childNodes
-    // @ts-ignore
-    MarkdownRenderer.renderMarkdown(rawText, el, sourcePath, null);
-    // Get rendered wiki-link element
-    let temp = el.lastElementChild;
-    if (!temp) throw new Error("No rendered child found");
-
-    const selector = rawText.startsWith("!")
-      ? ":scope > span.internal-embed"
-      : ":scope > a.internal-link";
-    const renderedLink = temp.querySelector(selector);
-    if (renderedLink) {
-      // Replace raw wiki-link with rendered one
-      if (!rawLink.parentNode)
-        console.error("failed to replace: %o has no parentNode", rawLink);
-      else rawLink.parentNode.replaceChild(renderedLink, rawLink);
-    } else {
-      console.error(rawLink.innerText, temp);
-      console.error("No match found, keeping the raw element");
-    }
-    // Remove temp
-    el.removeChild(temp);
+const pattern = /!HTMLEL_\d+?!/g;
+const insertEl = (text: Text, toFind: Map<string, Element>) => {
+  for (const str of [...text.wholeText.matchAll(pattern)]
+    .sort((a, b) => (a.index || 0) - (b.index || 0))
+    .map((arr) => arr[0])) {
+    let el = toFind.get(str);
+    if (!el) continue;
+    insertElToText(text, str, el);
+    toFind.delete(str);
   }
+};
+
+const insertElToText = (text: Text, pattern: string, toInsert: Element) => {
+  let index = text.wholeText.indexOf(pattern);
+  if (index < 0) return;
+  text = text.splitText(index);
+  text.parentElement?.insertBefore(toInsert, text);
+  text.textContent = text.wholeText.substring(pattern.length);
+  return text;
 };
