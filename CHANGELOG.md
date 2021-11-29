@@ -1,3 +1,10 @@
+## [1.4.1](https://github.com/aidenlx/table-extended/compare/1.4.0...1.4.1) (2021-11-29)
+
+
+### Bug Fixes
+
+* remove desktop only flag ([3c153cf](https://github.com/aidenlx/table-extended/commit/3c153cfa1258d1c651b44049bd8416ab2086fe7b)), closes [#9](https://github.com/aidenlx/table-extended/issues/9)
+
 # [1.4.0](https://github.com/aidenlx/table-extended/compare/1.3.2...1.4.0) (2021-10-25)
 
 
