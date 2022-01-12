@@ -13,14 +13,6 @@ import {
   TableExtendedSettings,
   TableExtendedSettingTab,
 } from "settings";
-
-const sleep = async (ms: number) => {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-};
-const INLINE_TYPE = "obsidian";
-
-const wikiRegex =
-  /(?:(?<!\\)!)?\[\[([^\x00-\x1f|]+?)(?:\\?\|([^\x00-\x1f|]+?))?\]\]/;
 export default class TableExtended extends Plugin {
   settings: TableExtendedSettings = DEFAULT_SETTINGS;
   async loadSettings() {
@@ -38,17 +30,13 @@ export default class TableExtended extends Plugin {
       rowspan: true,
       headerless: true,
     });
-    this.mdit.renderer.rules[INLINE_TYPE] = (tokens, idx) => {
-      return tokens[idx].content;
-    };
+    /** keep only table required features, let obsidian handle the markdown inside cell */
+    this.mdit.block.ruler.enableOnly(["table", "paragraph", "reference"]);
+    this.mdit.inline.ruler.enableOnly([]);
   }
   mdit: MarkdownIt;
   renderTable(raw: string) {
-    let blockTokens = this.mdit.parse(raw, {});
-    for (const t of blockTokens) {
-      t.type === "inline" && (t.type = INLINE_TYPE);
-    }
-    return this.mdit.renderer.render(blockTokens, this.mdit.options, {});
+    return this.mdit.render(raw);
   }
 
   processTable = (el: HTMLElement, ctx: MarkdownPostProcessorContext) => {
@@ -122,7 +110,7 @@ export default class TableExtended extends Plugin {
     );
 
   /**
-   * Fallback method, regular escape char will not take effect ()
+   * Fallback method, regular escape char will not take effect
    */
   renderFromPara = (textEl: HTMLParagraphElement, blockEl: HTMLElement) => {
     let elMap = new Map<string, Element>();
