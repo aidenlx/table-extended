@@ -31,7 +31,12 @@ export default class TableExtended extends Plugin {
       headerless: true,
     });
     /** keep only table required features, let obsidian handle the markdown inside cell */
-    this.mdit.block.ruler.enableOnly(["table", "paragraph", "reference"]);
+    this.mdit.block.ruler.enableOnly([
+      "table",
+      "paragraph",
+      "reference",
+      "blockquote",
+    ]);
     this.mdit.inline.ruler.enableOnly([]);
   }
   mdit: MarkdownIt;
@@ -52,12 +57,21 @@ export default class TableExtended extends Plugin {
   };
   processTextSection = (el: HTMLElement, ctx: MarkdownPostProcessorContext) => {
     const firstEl = el.firstElementChild;
-    if (
-      firstEl instanceof HTMLParagraphElement &&
-      firstEl.innerHTML.startsWith("-tx-")
+    if (!firstEl) return;
+    let p: HTMLParagraphElement;
+    if (firstEl instanceof HTMLParagraphElement) {
+      p = firstEl;
+    } else if (
+      firstEl instanceof HTMLQuoteElement &&
+      firstEl.firstElementChild instanceof HTMLParagraphElement
     ) {
-      const prefix = "-tx-\n",
-        src = getSrcMD(el, ctx);
+      p = firstEl.firstElementChild;
+    } else return;
+
+    const prefixInMd = /^(?:>\s*)?-tx-\n/;
+    let result;
+    if (p.innerHTML.startsWith("-tx-")) {
+      const src = getSrcMD(el, ctx);
       if (!src) {
         if (this.settings.forceNoParaResolve) {
           console.warn(
@@ -68,10 +82,13 @@ export default class TableExtended extends Plugin {
           console.log(
             "failed to get Markdown text, resolve text from <p> content...",
           );
-          this.renderFromPara(firstEl, el);
+          this.renderFromPara(
+            p,
+            firstEl instanceof HTMLQuoteElement ? firstEl : el,
+          );
         }
-      } else if (src.startsWith(prefix)) {
-        this.renderFromMD(src.substring(prefix.length), el, ctx);
+      } else if ((result = src.match(prefixInMd))) {
+        this.renderFromMD(src.substring(result[0].length), el, ctx);
       }
     }
   };
@@ -112,7 +129,7 @@ export default class TableExtended extends Plugin {
   /**
    * Fallback method, regular escape char will not take effect
    */
-  renderFromPara = (textEl: HTMLParagraphElement, blockEl: HTMLElement) => {
+  renderFromPara = (textEl: HTMLParagraphElement, containerEl: HTMLElement) => {
     let elMap = new Map<string, Element>();
     // remove all br from strictLineBreak=false
     textEl.querySelectorAll("br").forEach((br) => br.remove());
@@ -127,10 +144,10 @@ export default class TableExtended extends Plugin {
     if (!textEl.textContent) return;
 
     const result = this.renderTable(textEl.textContent.replace(/^-tx-\n/, ""));
-    blockEl.empty();
-    blockEl.innerHTML = result;
+    containerEl.empty();
+    containerEl.innerHTML = result;
     // put el back to rendered table
-    let walk = document.createTreeWalker(blockEl, NodeFilter.SHOW_TEXT),
+    let walk = document.createTreeWalker(containerEl, NodeFilter.SHOW_TEXT),
       text: Text;
     while ((text = walk.nextNode() as Text)) {
       insertEl(text, elMap);
