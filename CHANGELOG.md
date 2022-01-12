@@ -1,3 +1,15 @@
+# [1.5.0](https://github.com/aidenlx/table-extended/compare/1.4.1...1.5.0) (2022-01-12)
+
+
+### Bug Fixes
+
+* fix html not rendered; fix broken multiline mode ([92f46bd](https://github.com/aidenlx/table-extended/commit/92f46bd394fccf6ec3768d77232b345689498c48)), closes [#23](https://github.com/aidenlx/table-extended/issues/23)
+
+
+### Features
+
+* support -tx- table in blockquote ([d4dfb1f](https://github.com/aidenlx/table-extended/commit/d4dfb1f452530b195f71465ec8a8f3986bbd5bdb)), closes [#28](https://github.com/aidenlx/table-extended/issues/28)
+
 ## [1.4.1](https://github.com/aidenlx/table-extended/compare/1.4.0...1.4.1) (2021-11-29)
 
 
