@@ -1,3 +1,10 @@
+## [1.5.1](https://github.com/aidenlx/table-extended/compare/1.5.0...1.5.1) (2022-01-13)
+
+
+### Bug Fixes
+
+* fix markdown-attributes compatibility ([5ab62d7](https://github.com/aidenlx/table-extended/commit/5ab62d7bbf3d224462cb960e96e7df482dd26c9c)), closes [#26](https://github.com/aidenlx/table-extended/issues/26)
+
 # [1.5.0](https://github.com/aidenlx/table-extended/compare/1.4.1...1.5.0) (2022-01-12)
 
 
