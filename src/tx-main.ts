@@ -174,11 +174,28 @@ export default class TableExtended extends Plugin {
         ctx.sourcePath,
         child,
       );
-      let p = el.firstElementChild;
-      if (p) p.replaceWith(...p.childNodes);
+      let renderedFirstBlock = el.firstElementChild;
+      if (renderedFirstBlock) {
+        const from = renderedFirstBlock;
+        // copy attr set in markdown-attribute
+        ["style", "class", "id"].forEach((attr) => copyAttr(attr, from, el));
+        if (
+          renderedFirstBlock instanceof HTMLElement &&
+          el instanceof HTMLElement
+        ) {
+          Object.assign(el.dataset, renderedFirstBlock.dataset);
+        }
+        renderedFirstBlock.replaceWith(...renderedFirstBlock.childNodes);
+      }
     }
   };
 }
+
+const copyAttr = (attr: string, from: Element, to: Element) => {
+  if (from.hasAttribute(attr)) {
+    to.setAttribute(attr, from.getAttribute(attr)!);
+  }
+};
 
 const getSrcMD = (
   sectionEl: HTMLElement,
