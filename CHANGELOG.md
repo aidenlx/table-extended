@@ -1,3 +1,15 @@
+# [1.6.0](https://github.com/aidenlx/table-extended/compare/1.5.1...1.6.0) (2022-01-16)
+
+
+### Bug Fixes
+
+* fix footnote refs and contents rendered within table cells in -tx- tables ([186eb41](https://github.com/aidenlx/table-extended/commit/186eb41119708166964bf9e1a66a75bb943882c1))
+
+
+### Features
+
+* experimental support for export to PDF; improve multiline table handling ([9a4faf2](https://github.com/aidenlx/table-extended/commit/9a4faf227614f5c7fe04472000896bd5d514b91f))
+
 ## [1.5.1](https://github.com/aidenlx/table-extended/compare/1.5.0...1.5.1) (2022-01-13)
 
 
