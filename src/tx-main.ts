@@ -82,7 +82,20 @@ export default class TableExtended extends Plugin {
         if (!src) {
           console.warn("failed to get Markdown text, escaping...");
         } else if ((result = src.match(prefixPatternInMD))) {
+          const footnoteSelector = "sup.footnote-ref";
+          // save footnote refs
+          const footnoteRefs = [
+            ...el.querySelectorAll(footnoteSelector),
+          ] as HTMLElement[];
+          // footnote refs is replaced by new ones during rendering
           this.renderFromMD(src.substring(result[0].length), el, ctx);
+          // post process to revert footnote refs
+          for (const newRefs of el.querySelectorAll(footnoteSelector)) {
+            newRefs.replaceWith(footnoteRefs.shift()!);
+          }
+          for (const fnSection of el.querySelectorAll("section.footnotes")) {
+            fnSection.remove();
+          }
         }
       }
     }
