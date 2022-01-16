@@ -3,8 +3,6 @@ import mTable from "markdown-it-multimd-table";
 import {
   MarkdownPostProcessorContext,
   MarkdownPreviewRenderer,
-  MarkdownRenderChild,
-  MarkdownRenderer,
   MarkdownView,
   Plugin,
   TFile,
@@ -16,10 +14,10 @@ import {
 } from "settings";
 
 import Export2PDFHack from "./hack-pdf";
+import { mditOptions, renderMarkdown } from "./render";
 
 const prefixPatternInMD = /^(?:>\s*)?-tx-\n/;
 
-const mditOptions = { html: true };
 export default class TableExtended extends Plugin {
   settings: TableExtendedSettings = DEFAULT_SETTINGS;
 
@@ -56,7 +54,7 @@ export default class TableExtended extends Plugin {
   processNativeTable = (el: HTMLElement, ctx: MarkdownPostProcessorContext) => {
     if (!el.querySelector("table")) return;
 
-    const raw = getSrcMD(el, ctx);
+    const raw = getSourceMarkdown(el, ctx);
     if (!raw) {
       console.warn("failed to get Markdown text, escaping...");
       return;
@@ -80,7 +78,7 @@ export default class TableExtended extends Plugin {
 
       let result;
       if (p.innerHTML.startsWith("-tx-")) {
-        const src = getSrcMD(el, ctx);
+        const src = getSourceMarkdown(el, ctx);
         if (!src) {
           console.warn("failed to get Markdown text, escaping...");
         } else if ((result = src.match(prefixPatternInMD))) {
@@ -127,86 +125,10 @@ export default class TableExtended extends Plugin {
       }, 200),
     );
 
-  renderFromMD = (
-    src: string,
-    blockEl: HTMLElement,
-    ctx: MarkdownPostProcessorContext,
-  ) => {
-    let child = new MarkdownRenderChild(blockEl);
-    ctx.addChild(child);
-    // import render results
-    const ast = this.mdit.parse(src, {});
-    const elToPreserveText = ["td", "th", "caption"];
-    let MarkdownTextInTable: string[] = [];
-
-    for (let i = 0; i < ast.length; i++) {
-      const token = ast[i];
-      if (elToPreserveText.includes(token.tag) && token.nesting === 1) {
-        let iInline = i,
-          nextToken = ast[++iInline];
-        while (
-          // not closing tag
-          !elToPreserveText.includes(nextToken.tag) ||
-          nextToken.nesting !== -1
-        ) {
-          let content = "";
-          if (nextToken.type === "inline") {
-            content = nextToken.content;
-          } else if (nextToken.type === "fence") {
-            content =
-              "```" + nextToken.info + "\n" + nextToken.content + "\n" + "```";
-          } else if (nextToken.type === "code_block") {
-            content = nextToken.content.replace(/^/gm, "    ");
-          }
-
-          if (content) {
-            const index = MarkdownTextInTable.push(content) - 1;
-            token.attrSet("id", `TX_${index}`);
-            break;
-          }
-          nextToken = ast[++iInline];
-        }
-        // skip inline token and close token
-        i = iInline;
-      }
-    }
-    const result = this.mdit.renderer.render(ast, mditOptions, {});
-    blockEl.innerHTML = result;
-    for (let el of blockEl.querySelectorAll("[id^=TX_]")) {
-      const parent = el as HTMLElement,
-        indexText = el.id.substring(3 /* "TX_".length */);
-      el.removeAttribute("id");
-      if (!Number.isInteger(+indexText)) continue;
-      const text = MarkdownTextInTable[+indexText];
-      if (!text) continue;
-      parent.empty();
-      MarkdownRenderer.renderMarkdown(text, parent, ctx.sourcePath, child);
-
-      let renderedFirstBlock = parent.firstElementChild;
-      if (renderedFirstBlock) {
-        const from = renderedFirstBlock;
-        // copy attr set in markdown-attribute
-        ["style", "class", "id"].forEach((attr) =>
-          copyAttr(attr, from, parent),
-        );
-        if (renderedFirstBlock instanceof HTMLElement) {
-          Object.assign(parent.dataset, renderedFirstBlock.dataset);
-        }
-        // unwarp all children to the parent table cell/caption
-        if (renderedFirstBlock instanceof HTMLParagraphElement)
-          renderedFirstBlock.replaceWith(...renderedFirstBlock.childNodes);
-      }
-    }
-  };
+  renderFromMD = renderMarkdown.bind(this);
 }
 
-const copyAttr = (attr: string, from: Element, to: Element) => {
-  if (from.hasAttribute(attr)) {
-    to.setAttribute(attr, from.getAttribute(attr)!);
-  }
-};
-
-const getSrcMD = (
+const getSourceMarkdown = (
   sectionEl: HTMLElement,
   ctx: MarkdownPostProcessorContext,
 ): string | null => {
@@ -220,25 +142,4 @@ const getSrcMD = (
   } else {
     return null;
   }
-};
-
-const pattern = /!HTMLEL_\d+?!/g;
-const insertEl = (text: Text, toFind: Map<string, Element>) => {
-  for (const str of [...text.wholeText.matchAll(pattern)]
-    .sort((a, b) => (a.index || 0) - (b.index || 0))
-    .map((arr) => arr[0])) {
-    let el = toFind.get(str);
-    if (!el) continue;
-    insertElToText(text, str, el);
-    toFind.delete(str);
-  }
-};
-
-const insertElToText = (text: Text, pattern: string, toInsert: Element) => {
-  let index = text.wholeText.indexOf(pattern);
-  if (index < 0) return;
-  text = text.splitText(index);
-  text.parentElement?.insertBefore(toInsert, text);
-  text.textContent = text.wholeText.substring(pattern.length);
-  return text;
 };
