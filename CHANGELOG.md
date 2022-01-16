@@ -1,3 +1,10 @@
+## [1.6.1](https://github.com/aidenlx/table-extended/compare/1.6.0...1.6.1) (2022-01-16)
+
+
+### Bug Fixes
+
+* **hack-pdf:** fix internal links failed to export ([000472f](https://github.com/aidenlx/table-extended/commit/000472fd9e5dbe73fed6262add7f51137eed5404))
+
 # [1.6.0](https://github.com/aidenlx/table-extended/compare/1.5.1...1.6.0) (2022-01-16)
 
 
