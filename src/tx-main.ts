@@ -7,14 +7,24 @@ import {
   MarkdownRenderer,
   MarkdownView,
   Plugin,
+  TFile,
 } from "obsidian";
 import {
   DEFAULT_SETTINGS,
   TableExtendedSettings,
   TableExtendedSettingTab,
 } from "settings";
+
+import Export2PDFHack from "./hack-pdf";
+
+const prefixPatternInMD = /^(?:>\s*)?-tx-\n/;
+
+const mditOptions = { html: true };
 export default class TableExtended extends Plugin {
   settings: TableExtendedSettings = DEFAULT_SETTINGS;
+
+  print2pdfFileCache: TFile | null = null;
+
   async loadSettings() {
     this.settings = { ...this.settings, ...(await this.loadData()) };
   }
@@ -25,13 +35,15 @@ export default class TableExtended extends Plugin {
 
   constructor(...args: ConstructorParameters<typeof Plugin>) {
     super(...args);
-    this.mdit = MarkdownIt({ html: true }).use(mTable, {
+    this.mdit = MarkdownIt(mditOptions).use(mTable, {
       multiline: true,
       rowspan: true,
       headerless: true,
     });
     /** keep only table required features, let obsidian handle the markdown inside cell */
     this.mdit.block.ruler.enableOnly([
+      "code",
+      "fence",
       "table",
       "paragraph",
       "reference",
@@ -40,55 +52,40 @@ export default class TableExtended extends Plugin {
     this.mdit.inline.ruler.enableOnly([]);
   }
   mdit: MarkdownIt;
-  renderTable(raw: string) {
-    return this.mdit.render(raw);
-  }
 
-  processTable = (el: HTMLElement, ctx: MarkdownPostProcessorContext) => {
+  processNativeTable = (el: HTMLElement, ctx: MarkdownPostProcessorContext) => {
     if (!el.querySelector("table")) return;
 
     const raw = getSrcMD(el, ctx);
     if (!raw) {
-      console.warn("failed to get Markdown text, escaping...", el.innerHTML);
+      console.warn("failed to get Markdown text, escaping...");
       return;
     }
     el.empty();
     this.renderFromMD(raw, el, ctx);
   };
   processTextSection = (el: HTMLElement, ctx: MarkdownPostProcessorContext) => {
-    const firstEl = el.firstElementChild;
-    if (!firstEl) return;
-    let p: HTMLParagraphElement;
-    if (firstEl instanceof HTMLParagraphElement) {
-      p = firstEl;
-    } else if (
-      firstEl instanceof HTMLQuoteElement &&
-      firstEl.firstElementChild instanceof HTMLParagraphElement
-    ) {
-      p = firstEl.firstElementChild;
-    } else return;
+    // el contains only els for one block in preview;
+    // el contains els for all blocks in export2pdf
+    for (const child of el.children) {
+      let p: HTMLParagraphElement;
+      if (child instanceof HTMLParagraphElement) {
+        p = child;
+      } else if (
+        child instanceof HTMLQuoteElement &&
+        child.firstElementChild instanceof HTMLParagraphElement
+      ) {
+        p = child.firstElementChild;
+      } else continue;
 
-    const prefixInMd = /^(?:>\s*)?-tx-\n/;
-    let result;
-    if (p.innerHTML.startsWith("-tx-")) {
-      const src = getSrcMD(el, ctx);
-      if (!src) {
-        if (this.settings.forceNoParaResolve) {
-          console.warn(
-            "failed to get Markdown text, escaping...",
-            el.innerHTML,
-          );
-        } else {
-          console.log(
-            "failed to get Markdown text, resolve text from <p> content...",
-          );
-          this.renderFromPara(
-            p,
-            firstEl instanceof HTMLQuoteElement ? firstEl : el,
-          );
+      let result;
+      if (p.innerHTML.startsWith("-tx-")) {
+        const src = getSrcMD(el, ctx);
+        if (!src) {
+          console.warn("failed to get Markdown text, escaping...");
+        } else if ((result = src.match(prefixPatternInMD))) {
+          this.renderFromMD(src.substring(result[0].length), el, ctx);
         }
-      } else if ((result = src.match(prefixInMd))) {
-        this.renderFromMD(src.substring(result[0].length), el, ctx);
       }
     }
   };
@@ -97,9 +94,12 @@ export default class TableExtended extends Plugin {
     console.log("loading table-extended");
     await this.loadSettings();
     this.addSettingTab(new TableExtendedSettingTab(this.app, this));
+    if (this.settings.hackPDF) {
+      Export2PDFHack(this);
+    }
 
     if (this.settings.handleNativeTable)
-      MarkdownPreviewRenderer.registerPostProcessor(this.processTable);
+      MarkdownPreviewRenderer.registerPostProcessor(this.processNativeTable);
 
     this.registerMarkdownCodeBlockProcessor("tx", this.renderFromMD);
     this.registerMarkdownPostProcessor(this.processTextSection);
@@ -113,8 +113,9 @@ export default class TableExtended extends Plugin {
 
   onunload() {
     console.log("unloading table-extended");
-    MarkdownPreviewRenderer.unregisterPostProcessor(this.processTable);
+    MarkdownPreviewRenderer.unregisterPostProcessor(this.processNativeTable);
     this.refresh();
+    this.print2pdfFileCache = null;
   }
   /** refresh opened MarkdownView */
   refresh = () =>
@@ -126,34 +127,6 @@ export default class TableExtended extends Plugin {
       }, 200),
     );
 
-  /**
-   * Fallback method, regular escape char will not take effect
-   */
-  renderFromPara = (textEl: HTMLParagraphElement, containerEl: HTMLElement) => {
-    let elMap = new Map<string, Element>();
-    // remove all br from strictLineBreak=false
-    textEl.querySelectorAll("br").forEach((br) => br.remove());
-    // extract html elements and save them in temp key-el map
-    for (let i = 0; i < textEl.children.length; i++) {
-      const el = textEl.children[i],
-        id = `!HTMLEL_${i}!`;
-      el.insertAdjacentText("afterend", id);
-      elMap.set(id, el);
-      el.remove();
-    }
-    if (!textEl.textContent) return;
-
-    const result = this.renderTable(textEl.textContent.replace(/^-tx-\n/, ""));
-    containerEl.empty();
-    containerEl.innerHTML = result;
-    // put el back to rendered table
-    let walk = document.createTreeWalker(containerEl, NodeFilter.SHOW_TEXT),
-      text: Text;
-    while ((text = walk.nextNode() as Text)) {
-      insertEl(text, elMap);
-    }
-    elMap.clear();
-  };
   renderFromMD = (
     src: string,
     blockEl: HTMLElement,
@@ -162,30 +135,66 @@ export default class TableExtended extends Plugin {
     let child = new MarkdownRenderChild(blockEl);
     ctx.addChild(child);
     // import render results
-    const result = this.renderTable(src);
+    const ast = this.mdit.parse(src, {});
+    const elToPreserveText = ["td", "th", "caption"];
+    let MarkdownTextInTable: string[] = [];
+
+    for (let i = 0; i < ast.length; i++) {
+      const token = ast[i];
+      if (elToPreserveText.includes(token.tag) && token.nesting === 1) {
+        let iInline = i,
+          nextToken = ast[++iInline];
+        while (
+          // not closing tag
+          !elToPreserveText.includes(nextToken.tag) ||
+          nextToken.nesting !== -1
+        ) {
+          let content = "";
+          if (nextToken.type === "inline") {
+            content = nextToken.content;
+          } else if (nextToken.type === "fence") {
+            content =
+              "```" + nextToken.info + "\n" + nextToken.content + "\n" + "```";
+          } else if (nextToken.type === "code_block") {
+            content = nextToken.content.replace(/^/gm, "    ");
+          }
+
+          if (content) {
+            const index = MarkdownTextInTable.push(content) - 1;
+            token.attrSet("id", `TX_${index}`);
+            break;
+          }
+          nextToken = ast[++iInline];
+        }
+        // skip inline token and close token
+        i = iInline;
+      }
+    }
+    const result = this.mdit.renderer.render(ast, mditOptions, {});
     blockEl.innerHTML = result;
-    for (const el of blockEl.querySelectorAll("td, th, caption")) {
-      let raw = el.textContent;
-      if (!raw?.trim()) continue;
-      el.textContent = null;
-      MarkdownRenderer.renderMarkdown(
-        raw,
-        el as HTMLElement,
-        ctx.sourcePath,
-        child,
-      );
-      let renderedFirstBlock = el.firstElementChild;
+    for (let el of blockEl.querySelectorAll("[id^=TX_]")) {
+      const parent = el as HTMLElement,
+        indexText = el.id.substring(3 /* "TX_".length */);
+      el.removeAttribute("id");
+      if (!Number.isInteger(+indexText)) continue;
+      const text = MarkdownTextInTable[+indexText];
+      if (!text) continue;
+      parent.empty();
+      MarkdownRenderer.renderMarkdown(text, parent, ctx.sourcePath, child);
+
+      let renderedFirstBlock = parent.firstElementChild;
       if (renderedFirstBlock) {
         const from = renderedFirstBlock;
         // copy attr set in markdown-attribute
-        ["style", "class", "id"].forEach((attr) => copyAttr(attr, from, el));
-        if (
-          renderedFirstBlock instanceof HTMLElement &&
-          el instanceof HTMLElement
-        ) {
-          Object.assign(el.dataset, renderedFirstBlock.dataset);
+        ["style", "class", "id"].forEach((attr) =>
+          copyAttr(attr, from, parent),
+        );
+        if (renderedFirstBlock instanceof HTMLElement) {
+          Object.assign(parent.dataset, renderedFirstBlock.dataset);
         }
-        renderedFirstBlock.replaceWith(...renderedFirstBlock.childNodes);
+        // unwarp all children to the parent table cell/caption
+        if (renderedFirstBlock instanceof HTMLParagraphElement)
+          renderedFirstBlock.replaceWith(...renderedFirstBlock.childNodes);
       }
     }
   };

@@ -8,12 +8,12 @@ import TableExtended from "tx-main";
 
 export interface TableExtendedSettings {
   handleNativeTable: boolean;
-  forceNoParaResolve: boolean;
+  hackPDF: boolean;
 }
 
 export const DEFAULT_SETTINGS: TableExtendedSettings = {
   handleNativeTable: false,
-  forceNoParaResolve: false,
+  hackPDF: false,
 };
 
 export class TableExtendedSettingTab extends PluginSettingTab {
@@ -52,13 +52,41 @@ export class TableExtendedSettingTab extends PluginSettingTab {
             this.plugin.settings.handleNativeTable = value;
             if (value)
               MarkdownPreviewRenderer.registerPostProcessor(
-                this.plugin.processTable,
+                this.plugin.processNativeTable,
               );
             else
               MarkdownPreviewRenderer.unregisterPostProcessor(
-                this.plugin.processTable,
+                this.plugin.processNativeTable,
               );
             this.plugin.refresh();
+            this.plugin.saveData(this.plugin.settings);
+            this.display();
+          }),
+      );
+    new Setting(this.containerEl)
+      .setName("Expermental: Export to PDF support")
+      .setDesc(
+        createFragment((descEl) => {
+          descEl.appendText("Reload obsidian to take effect");
+          descEl.appendChild(createEl("br"));
+          descEl.appendText(
+            "If PDF export is broken with this option enabled, disable this feature and open new issue in ",
+          );
+          descEl.appendChild(
+            createEl("a", {
+              text: "here",
+              attr: {
+                href: "https://github.com/alx-plugins/table-extended/issues",
+              },
+            }),
+          );
+        }),
+      )
+      .addToggle((toggle) =>
+        toggle
+          .setValue(this.plugin.settings.hackPDF)
+          .onChange(async (value) => {
+            this.plugin.settings.hackPDF = value;
             this.plugin.saveData(this.plugin.settings);
             this.display();
           }),
