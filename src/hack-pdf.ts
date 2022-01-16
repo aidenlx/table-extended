@@ -3,8 +3,6 @@ import { MarkdownView, TFile, Vault } from "obsidian";
 
 import TableExtended from "./tx-main";
 
-const placeholder = "export2pdf";
-
 const Export2PDFHack = (plugin: TableExtended) => {
   const unloaders = [
     around(MarkdownView.prototype, {
@@ -12,8 +10,8 @@ const Export2PDFHack = (plugin: TableExtended) => {
       printToPdf: (original) =>
         function (this: MarkdownView) {
           plugin.print2pdfFileCache = this.file;
-          // @ts-ignore
-          this.file = placeholder;
+          // shalow copy the file to provide basic info
+          this.file = { ...this.file, export2pdf: true } as any;
           original.call(this);
           this.file = plugin.print2pdfFileCache;
         },
@@ -21,7 +19,7 @@ const Export2PDFHack = (plugin: TableExtended) => {
     around(Vault.prototype, {
       cachedRead: (original) =>
         async function (this: Vault, input: TFile | string) {
-          if (input === placeholder) {
+          if (!(input instanceof TFile) && (input as any)?.export2pdf) {
             const file = plugin.print2pdfFileCache;
             if (!file) {
               throw new Error(
